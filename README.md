@@ -91,15 +91,20 @@ Without accurate localization:
 
 ###  House World (Gazebo)
 
-![House World](assets/house_world.jpeg)
+![House World](house_world.jpeg)
+
 
 ###  Pose Graph (RTABMap)
 
-![Pose Graph](assets/pose_graph.jpeg)
+![Pose Graph](pose_graph.jpeg)
+
+
 
 ### Occupancy Map (RViz2)
 
-![Occupancy Map](assets/map.jpeg)
+![Occupancy Map](map.jpeg)
+
+
 
 ---
 
