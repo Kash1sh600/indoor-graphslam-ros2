@@ -1,5 +1,8 @@
 #  Indoor Localization using GraphSLAM (ROS2)
-🚀 Real-time indoor mapping and localization using GraphSLAM with ROS2 and RTABMap
+
+Real-time indoor mapping and localization using GraphSLAM with ROS2 and RTABMap
+
+---
 
 ##  Overview
 
@@ -15,7 +18,7 @@ We implemented this using:
 
 ---
 
-## Problem Statement
+##  Problem Statement
 
 Indoor localization is a core robotics challenge where a robot must determine its position without GPS.
 
@@ -87,24 +90,19 @@ Without accurate localization:
 
 ---
 
-## Output Screenshots
+##  Output Screenshots
 
 ###  House World (Gazebo)
 
 ![House World](house_world.jpeg)
 
-
 ###  Pose Graph (RTABMap)
 
 ![Pose Graph](pose_graph.jpeg)
 
-
-
-### Occupancy Map (RViz2)
+###  Occupancy Map (RViz2)
 
 ![Occupancy Map](map.jpeg)
-
-
 
 ---
 
@@ -114,7 +112,7 @@ Without accurate localization:
 
 ---
 
-## Installation & Setup
+##  Installation & Setup
 
 ```bash
 git clone https://github.com/Kash1sh600/indoor-graphslam-ros2
@@ -123,7 +121,88 @@ cd indoor-graphslam-ros2
 colcon build
 source install/setup.bash
 
-ros2 launch <package_name> <launch_file>
+# Terminal 1: Launch simulation world
+ros2 launch my_graphslam world.launch.py
+
+# Terminal 2: Start GraphSLAM (RTABMap)
+ros2 launch my_graphslam slam.launch.py
+
+# Terminal 3: Open RViz2 visualization
+ros2 launch my_graphslam rviz.launch.py
+
+# Terminal 4: Control robot
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
+
+---
+
+##  Implementation Steps (What We Did)
+
+###  Dependency Installation
+
+```bash
+sudo apt install ros-humble-turtlebot3 ros-humble-turtlebot3-gazebo ros-humble-turtlebot3-simulations -y
+sudo apt install ros-humble-rtabmap-ros -y
+sudo apt install ros-humble-teleop-twist-keyboard -y
+```
+
+---
+
+###  Workspace & Package Setup
+
+```bash
+mkdir -p ~/my_graphslam_ws/src
+cd ~/my_graphslam_ws/src
+
+ros2 pkg create my_graphslam --build-type ament_python --dependencies rclpy
+
+cd ~/my_graphslam_ws
+colcon build --symlink-install
+source install/setup.bash
+```
+
+---
+
+###  Loop Closure Process
+
+* Robot is driven through multiple rooms
+* Returning to the starting position triggers **loop closure**
+* RTABMap detects revisited locations using **ICP**
+* g2o performs **global graph optimization**
+* The entire trajectory is corrected in real-time
+
+---
+
+###  Saving the Map
+
+```bash
+ros2 run nav2_map_server map_saver_cli -f ~/my_graphslam_ws/maps/graphslam_map
+```
+
+---
+
+##  Codebase Structure
+
+```
+my_graphslam/
+├── config/
+│   └── rtabmap_params.yaml
+├── launch/
+│   ├── world.launch.py
+│   ├── slam.launch.py
+│   ├── rviz.launch.py
+│   └── world_with_actors.launch.py
+├── rviz/
+│   └── graphslam.rviz
+├── worlds/
+│   └── house_with_actors.world
+├── my_graphslam/
+│   └── __init__.py
+├── resource/
+│   └── my_graphslam
+├── package.xml
+├── setup.py
+└── README.md
 ```
 
 ---
