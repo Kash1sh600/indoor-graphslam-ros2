@@ -1,0 +1,196 @@
+<?xml version="1.0" ?>
+<!--
+  TurtleBot3 House World + Dynamic Actors
+  ========================================
+  Based on the standard TurtleBot3 house world, extended with:
+  - 3 dynamic actors (simulated people walking predefined paths)
+  - Dynamic objects show up as moving artifacts in the SLAM map
+  - This demonstrates that GraphSLAM handles real-time dynamic environments
+
+  Actor paths are defined as waypoints. Gazebo interpolates between them.
+  Each actor follows a loop so they move continuously during the simulation.
+-->
+<sdf version="1.6">
+  <world name="house_with_actors">
+
+    <!-- ==================== PHYSICS + RENDERING ==================== -->
+    <plugin name="gazebo_ros_init" filename="libgazebo_ros_init.so"/>
+    <plugin name="gazebo_ros_factory" filename="libgazebo_ros_factory.so"/>
+
+    <physics type="ode">
+      <real_time_update_rate>1000.0</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+    </physics>
+
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <!-- Sun light -->
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- ==================== GROUND PLANE ==================== -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ==================== HOUSE MODEL ==================== -->
+    <!-- This is the standard TurtleBot3 house - walls, rooms, doorways -->
+    <!-- It gives RTABMap rich corner/edge features for GraphSLAM -->
+    <include>
+      <uri>model://turtlebot3_house</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- ==================== DYNAMIC ACTORS ==================== -->
+    <!--
+      Gazebo Actors: these are animated models that move along scripted paths.
+      They appear in the LiDAR scan as obstacles, and since they move,
+      they create noise/artifacts in the SLAM map.
+
+      For your project: this shows GraphSLAM running in a DYNAMIC environment.
+      You can discuss how dynamic objects affect map quality.
+    -->
+
+    <!-- ACTOR 1: Person walking a loop in the main room -->
+    <actor name="person_1">
+      <pose>0 0 0 0 0 0</pose>
+      <skin>
+        <filename>walk.dae</filename>
+        <scale>1.0</scale>
+      </skin>
+      <animation name="walking">
+        <filename>walk.dae</filename>
+        <scale>1.0</scale>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+      <script>
+        <loop>true</loop>
+        <delay_start>0</delay_start>
+        <auto_start>true</auto_start>
+        <!-- Waypoints define the walking path (x, y, z, roll, pitch, yaw, time) -->
+        <!-- This actor walks a rectangle in the living room area -->
+        <trajectory id="0" type="walking">
+          <waypoint>
+            <time>0</time>
+            <pose>1.0 1.0 0 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>3</time>
+            <pose>1.0 3.0 0 0 0 0</pose>
+          </waypoint>
+          <waypoint>
+            <time>6</time>
+            <pose>3.0 3.0 0 0 0 3.14</pose>
+          </waypoint>
+          <waypoint>
+            <time>9</time>
+            <pose>3.0 1.0 0 0 0 3.14</pose>
+          </waypoint>
+          <waypoint>
+            <time>12</time>
+            <pose>1.0 1.0 0 0 0 0</pose>
+          </waypoint>
+        </trajectory>
+      </script>
+    </actor>
+
+    <!-- ACTOR 2: Person walking a different path (corridor area) -->
+    <actor name="person_2">
+      <pose>-1 0 0 0 0 0</pose>
+      <skin>
+        <filename>walk.dae</filename>
+        <scale>1.0</scale>
+      </skin>
+      <animation name="walking">
+        <filename>walk.dae</filename>
+        <scale>1.0</scale>
+        <interpolate_x>true</interpolate_x>
+      </animation>
+      <script>
+        <loop>true</loop>
+        <delay_start>2</delay_start>
+        <auto_start>true</auto_start>
+        <!-- This actor walks along a corridor back and forth -->
+        <trajectory id="0" type="walking">
+          <waypoint>
+            <time>0</time>
+            <pose>-1.0 -1.0 0 0 0 1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>5</time>
+            <pose>-1.0 2.0 0 0 0 1.57</pose>
+          </waypoint>
+          <waypoint>
+            <time>10</time>
+            <pose>-1.0 -1.0 0 0 0 -1.57</pose>
+          </waypoint>
+        </trajectory>
+      </script>
+    </actor>
+
+    <!-- ACTOR 3: A moving box (simulates a dynamic obstacle like a cart) -->
+    <!-- This shows a non-human dynamic object for variety -->
+    <model name="moving_box">
+      <pose>2 -1 0.3 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>1.0</mass>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+            <box><size>0.5 0.5 0.6</size></box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box><size>0.5 0.5 0.6</size></box>
+          </geometry>
+          <material>
+            <ambient>0.8 0.2 0.2 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <!-- Plugin to move the box using a simple sine trajectory -->
+      <plugin name="move_box" filename="libgazebo_ros_planar_move.so">
+        <ros>
+          <namespace>/moving_box</namespace>
+        </ros>
+        <update_rate>10</update_rate>
+        <publish_odom>false</publish_odom>
+        <publish_odom_tf>false</publish_odom_tf>
+      </plugin>
+    </model>
+
+  </world>
+</sdf>

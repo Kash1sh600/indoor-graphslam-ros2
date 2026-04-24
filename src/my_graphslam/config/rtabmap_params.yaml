@@ -1,0 +1,69 @@
+/**:
+  ros__parameters:
+    use_sim_time: true
+
+rtabmap:
+  ros__parameters:
+    use_sim_time: true
+
+    # -----------------------------------------------------------------
+    # Sensor subscriptions
+    # The TurtleBot3 waffle has:
+    #   - /scan            → 2D LiDAR (360 degree)
+    #   - /camera/image_raw         → RGB camera
+    #   - /camera/depth/image_raw   → Depth camera
+    # -----------------------------------------------------------------
+    subscribe_depth: true
+    subscribe_scan: true
+    approx_sync: true
+
+    # Frame IDs
+    frame_id: "base_footprint"
+    odom_frame_id: "odom"
+    map_frame_id: "map"
+
+    # -----------------------------------------------------------------
+    # GraphSLAM Backend - g2o optimizer
+    # g2o = General Graph Optimization
+    # It treats SLAM as a least-squares graph optimization problem:
+    #   Minimize sum of errors across all edges (odometry + loop closures)
+    # -----------------------------------------------------------------
+    Optimizer/Strategy: "1"       # 1=g2o, 2=GTSAM, 0=TORO
+    Optimizer/Iterations: "100"
+    Optimizer/Epsilon: "0.0001"
+    Optimizer/Robust: "true"      # use robust kernels to handle outlier loop closures
+
+    # -----------------------------------------------------------------
+    # Loop Closure Detection
+    # RTABMap uses visual bag-of-words to detect when the robot
+    # revisits a location. When detected, a new edge is added to
+    # the pose graph and g2o re-optimizes the whole graph.
+    # -----------------------------------------------------------------
+    Rtabmap/DetectionRate: "1.0"
+    Rtabmap/TimeThr: "0"
+    RGBD/LoopClosureReextractFeatures: "true"
+    RGBD/OptimizeMaxError: "3.0"
+    RGBD/OptimizeFromGraphEnd: "false"
+    RGBD/ProximityBySpace: "true"   # also detect loop closures by proximity in map space
+
+    # -----------------------------------------------------------------
+    # Memory
+    # -----------------------------------------------------------------
+    Mem/STMSize: "30"
+    Mem/NotLinkedNodesKept: "false"
+    Mem/UseOdomGravity: "false"
+
+    # -----------------------------------------------------------------
+    # Feature matching (for loop closure confirmation)
+    # -----------------------------------------------------------------
+    Vis/MinInliers: "15"
+    Vis/InlierDistance: "0.1"
+    Vis/MaxDepth: "4.0"
+
+    # -----------------------------------------------------------------
+    # Occupancy Grid (the 2D map you see in RViz)
+    # -----------------------------------------------------------------
+    Grid/FromDepth: "true"
+    Grid/RangeMax: "4.0"
+    Grid/RayTracing: "true"
+    Grid/3D: "false"
